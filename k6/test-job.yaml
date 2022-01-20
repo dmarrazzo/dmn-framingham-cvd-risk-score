@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6-test
+spec:
+  parallelism: 12
+  completions: 12
+  activeDeadlineSeconds: 1800 
+  backoffLimit: 2   
+  template:
+    metadata:
+      name: k6-test
+      labels:
+        deployment: k6-test
+    spec:
+      # nodeSelector:
+      #   bench: node2
+      containers:
+      - image: loadimpact/k6@sha256:fd17c4512db69386d11bc56b9c4b0d0e24b9370cc9fee5d1584dcbfbcdfecbaf
+        imagePullPolicy: IfNotPresent
+        name: k6-test
+        args: ["run", "script.js"]
+        volumeMounts:
+        - mountPath: /home/k6/script.js
+          subPath: script.js
+          name: script-volume
+      restartPolicy: OnFailure
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: script
+        name: script-volume
+      resources:
+        limits:
+          cpu: "4"
+          memory: 500Mi
+        requests:
+          cpu: "4"
+          memory: 300Mi
